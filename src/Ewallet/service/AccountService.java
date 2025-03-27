@@ -10,4 +10,5 @@ public interface AccountService {
     boolean withdraw(String username, double amount);
     double checkBalance(String username);
     boolean transfer(String sourceUsername, String targetUsername, double amount);
+    void showAccountDetails(String username);
 }

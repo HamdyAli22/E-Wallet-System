@@ -11,11 +11,8 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public boolean createAccount(Account account) {
-        List<Account> accounts = walletSystem.getAccounts();
-        for (Account acc : accounts) {
-            if (acc.getUsername().equals(account.getUsername())) {
-                return false;
-            }
+        if(findAccountByUsername(account.getUsername()) != null){
+            return false;
         }
         walletSystem.getAccounts().add(account);
         return true;
@@ -23,38 +20,31 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public boolean login(Account account) {
-        List<Account> accounts = walletSystem.getAccounts();
-        for (Account acc : accounts) {
-            if (acc.getUsername().equals(account.getUsername()) && acc.getPassword().equals(account.getPassword())) {
-                return true; // Login successful
-            }
+        Account existingAccount = findAccountByUsername(account.getUsername());
+        if (existingAccount != null && existingAccount.getPassword().equals(account.getPassword())) {
+            return true; // Login successful
         }
         return false;
     }
 
     @Override
     public boolean deposit(String username, double amount) {
-        List<Account> accounts = walletSystem.getAccounts();
-        for (Account account : accounts) {
-            if (account.getUsername().equals(username)) {
-                account.setBalance(account.getBalance() + amount);
-                return true;
-            }
+        Account account = findAccountByUsername(username);
+        if (account != null) {
+            account.setBalance(account.getBalance() + amount);
+            return true;
         }
         return false;
     }
 
     public boolean withdraw(String username, double amount) {
-        List<Account> accounts = walletSystem.getAccounts();
-        for (Account account : accounts) {
-            if (account.getUsername().equals(username)) {
-                if (account.getBalance() >= amount) {
-                    account.setBalance(account.getBalance() - amount);
-                    return true;
-                }else{
-                    return false;
-                }
-
+        Account account = findAccountByUsername(username);
+        if (account != null) {
+            if (account.getBalance() >= amount) {
+                account.setBalance(account.getBalance() - amount);
+                return true;
+            }else{
+                return false;
             }
         }
         return false;
@@ -62,25 +52,19 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public double checkBalance(String username) {
-        for (Account acc : walletSystem.getAccounts()) {
-            if (acc.getUsername().equals(username)) {
-                return acc.getBalance();
-            }
+        Account acc = findAccountByUsername(username);
+        if (acc != null) {
+            return acc.getBalance();
         }
         return 0;
     }
 
     @Override
     public boolean transfer(String sourceUsername, String targetUsername, double amount) {
-        List<Account> accounts = walletSystem.getAccounts();
-        Account sourceAccount = null, targetAccount = null;
-        for (Account acc : accounts) {
-            if (acc.getUsername().equals(sourceUsername)) {
-                sourceAccount = acc;
-            } else if (acc.getUsername().equals(targetUsername)) {
-                targetAccount = acc;
-            }
-        }
+
+        Account sourceAccount = findAccountByUsername(sourceUsername);
+        Account targetAccount = findAccountByUsername(targetUsername);
+
         if (sourceAccount == null) {
             System.out.println("Transfer failed: Source account not found.");
             return false;
@@ -93,6 +77,31 @@ public class AccountServiceImpl implements AccountService {
             System.out.println("Transfer failed: Insufficient balance.");
             return false;
         }
+        sourceAccount.setBalance(sourceAccount.getBalance() - amount);
+        targetAccount.setBalance(targetAccount.getBalance() + amount);
+
+        System.out.println("Transfer successful: " + amount + " transferred to " + targetUsername);
         return true;
+    }
+
+    @Override
+    public void showAccountDetails(String username) {
+        Account account = findAccountByUsername(username);
+        if(account != null){
+            System.out.println("===== Account Details =====");
+            System.out.println("Username: " + account.getUsername());
+            System.out.println("Password: " + account.getPassword());
+            System.out.println("Balance: $" + account.getBalance());
+        }
+    }
+
+    public Account findAccountByUsername(String username) {
+        List<Account> accounts = walletSystem.getAccounts();
+        for (Account acc : accounts) {
+            if (acc.getUsername().equalsIgnoreCase(username)) { // Case-insensitive match
+                return acc;
+            }
+        }
+        return null; // Account not found
     }
 }

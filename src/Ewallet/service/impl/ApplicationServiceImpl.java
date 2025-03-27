@@ -9,7 +9,7 @@ import java.util.Scanner;
 
 public class ApplicationServiceImpl implements ApplicationService {
     private  Scanner scanner = new Scanner(System.in);
-    private AccountService accountService = new AccountServiceImpl();
+    private AccountServiceImpl    accountService = new AccountServiceImpl();
     private ValidationServiceImpl validationService = new ValidationServiceImpl();
     @Override
     public void start() {
@@ -82,7 +82,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         int counter = 0;
         System.out.println("Welcome, " + account.getUsername());
         while(true){
-            System.out.println("1-Deposit    2-Withdraw    3-Check Balance    4-Logout");
+            System.out.println("1-Deposit    2-Withdraw    3-Check Balance    4-Transfer    5-Show Account Details    6-Logout");
 
             int choice = Integer.parseInt(scanner.nextLine());
             switch (choice) {
@@ -95,7 +95,13 @@ public class ApplicationServiceImpl implements ApplicationService {
                     case 3:
                         checkBalance(account.getUsername());
                         break;
-                case 4:
+                        case 4:
+                            transfer(account.getUsername());
+                            break;
+                            case 5:
+                                accountService.showAccountDetails(account.getUsername());
+                                break;
+                case 6:
                     System.out.println("Logged out successfully!");
                     return;
                 default:
@@ -135,7 +141,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         double amount = Double.parseDouble(scanner.nextLine());
 
         if (accountService.deposit(username, amount)) {
-            System.out.println("Deposit Successful.");
+            System.out.println("Deposit Successful. Current Balance:" + accountService.checkBalance(username));
         } else {
             System.out.println("Account Not Found.");
         }
@@ -146,7 +152,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         System.out.println("Please Enter amount to withdraw");
         double amount = Double.parseDouble(scanner.nextLine());
         if (accountService.withdraw(username, amount)) {
-            System.out.println("Withdrawal Successful.");
+            System.out.println("Withdrawal Successful. Current Balance:" + accountService.checkBalance(username));
         }else{
             System.out.println("Insufficient Balance.");
         }
@@ -157,6 +163,25 @@ public class ApplicationServiceImpl implements ApplicationService {
             System.out.println("Your current balance is: $" + balance);
         } else {
             System.out.println("Account not found.");
+        }
+    }
+
+    private void transfer(String sourceUserame) {
+
+
+        System.out.println("Enter the username of the recipient:");
+        String targetUsername = scanner.nextLine();
+       double amount = 0;
+        if(accountService.findAccountByUsername(targetUsername) != null) {
+            System.out.println("Enter the amount to transfer:");
+            amount = Double.parseDouble(scanner.nextLine());
+        }else{
+            System.out.println("Transfer failed: Target account not found.");
+            return;
+        }
+        boolean success = accountService.transfer(sourceUserame, targetUsername, amount);
+        if (success) {
+            System.out.println("Current Balance: " + accountService.checkBalance(sourceUserame));
         }
     }
 
