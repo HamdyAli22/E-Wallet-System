@@ -22,11 +22,23 @@ public class ValidationServiceImpl implements ValidationService {
             System.out.println("Password must be at least 6 characters long.");
             return false;
         }
-        if(!password.matches(".*[A-Z].*") || !password.matches(".*[a-z].*") ||
-           !password.matches(".*\\d.*")   || !password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")){
+        if (!password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-={}:;\"'|,.<>/?]).*$")) {
             System.out.println("Password must contain at least one number, one uppercase letter, one lowercase letter, and one special character.");
             return false;
         }
         return true;
+    }
+    public boolean validateAmount(String amount) {
+        try{
+            if(Double.parseDouble(amount) == 0){
+                System.out.println("Amount must be greater than zero.");
+                return false;
+            }
+            return true;
+        }catch(NumberFormatException e){
+            System.out.println("Amount must be a number.");
+            return false;
+        }
+
     }
 }

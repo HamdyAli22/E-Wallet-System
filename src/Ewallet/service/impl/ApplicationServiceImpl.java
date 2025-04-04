@@ -1,9 +1,7 @@
 package Ewallet.service.impl;
 
 import Ewallet.model.Account;
-import Ewallet.service.AccountService;
 import Ewallet.service.ApplicationService;
-import Ewallet.service.TransactionService;
 
 import java.util.Scanner;
 
@@ -80,26 +78,35 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
     private void userDashboard(Account account){
         int counter = 0;
+        int choice = 0;
         System.out.println("Welcome, " + account.getUsername());
         while(true){
             System.out.println("1-Deposit    2-Withdraw    3-Check Balance    4-Transfer    5-Show Account Details    6-Logout");
-
-            int choice = Integer.parseInt(scanner.nextLine());
+            while (true) {
+                try{
+                    choice = Integer.parseInt(scanner.nextLine());
+                }catch (Exception e){
+                    System.out.println("Please Enter Valid Number.");
+                    scanner = new Scanner(System.in);
+                    continue;
+                }
+                break;
+            }
             switch (choice) {
                 case 1:
-                    deposit(account.getUsername());
+                    deposit(account);
                     break;
                 case 2:
-                    withdraw(account.getUsername());
+                    withdraw(account);
                     break;
                     case 3:
-                        checkBalance(account.getUsername());
+                        checkBalance(account);
                         break;
                         case 4:
-                            transfer(account.getUsername());
+                            transfer(account);
                             break;
                             case 5:
-                                accountService.showAccountDetails(account.getUsername());
+                                accountService.showAccountDetails(account);
                                 break;
                 case 6:
                     System.out.println("Logged out successfully!");
@@ -135,30 +142,29 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     }
 
-    private void deposit(String username){
+    private void deposit(Account account){
 
         System.out.println("Please Enter amount to deposit");
-        double amount = Double.parseDouble(scanner.nextLine());
-
-        if (accountService.deposit(username, amount)) {
-            System.out.println("Deposit Successful. Current Balance:" + accountService.checkBalance(username));
+        String amount = getValidAmount(scanner) ;
+        if (accountService.deposit(account, Double.parseDouble(amount))) {
+            System.out.println("Deposit Successful. Current Balance:" + accountService.checkBalance(account));
         } else {
             System.out.println("Account Not Found.");
         }
 
     }
 
-    private void withdraw(String username){
+    private void withdraw(Account account){
         System.out.println("Please Enter amount to withdraw");
-        double amount = Double.parseDouble(scanner.nextLine());
-        if (accountService.withdraw(username, amount)) {
-            System.out.println("Withdrawal Successful. Current Balance:" + accountService.checkBalance(username));
+        String amount = getValidAmount(scanner) ;
+        if (accountService.withdraw(account, Double.parseDouble(amount))) {
+            System.out.println("Withdrawal Successful. Current Balance:" + accountService.checkBalance(account));
         }else{
             System.out.println("Insufficient Balance.");
         }
     }
-    private void checkBalance(String username) {
-        double balance = accountService.checkBalance(username);
+    private void checkBalance(Account account) {
+        double balance = accountService.checkBalance(account);
         if (balance >= 0) {
             System.out.println("Your current balance is: $" + balance);
         } else {
@@ -166,22 +172,23 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
     }
 
-    private void transfer(String sourceUserame) {
+    private void transfer(Account sourceAccount) {
 
 
         System.out.println("Enter the username of the recipient:");
         String targetUsername = scanner.nextLine();
-       double amount = 0;
-        if(accountService.findAccountByUsername(targetUsername) != null) {
+        Account targetAccount = accountService.findAccountByUsername(targetUsername);
+         String amount;
+        if(targetAccount != null) {
             System.out.println("Enter the amount to transfer:");
-            amount = Double.parseDouble(scanner.nextLine());
+            amount = getValidAmount(scanner) ;
         }else{
             System.out.println("Transfer failed: Target account not found.");
             return;
         }
-        boolean success = accountService.transfer(sourceUserame, targetUsername, amount);
+        boolean success = accountService.transfer(sourceAccount, targetAccount,Double.parseDouble(amount));
         if (success) {
-            System.out.println("Current Balance: " + accountService.checkBalance(sourceUserame));
+            System.out.println("Current Balance: " + accountService.checkBalance(sourceAccount));
         }
     }
 
@@ -209,5 +216,17 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         return new Account(username, password);
 
+    }
+    private String getValidAmount(Scanner scanner){
+        String amount;
+        while (true){
+            amount = scanner.nextLine();
+
+            if (!validationService.validateAmount(amount)) {
+                continue;
+            }
+            break;
+        }
+       return amount;
     }
 }
